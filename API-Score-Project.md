@@ -5,7 +5,7 @@ output:
   html_document: 
     keep_md: yes
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 
@@ -181,12 +181,12 @@ set.seed(1234)
 
 Base05<- read.csv("/Users/DavidKwon/Desktop/Yongbock/API Score Prj/API 2005 Base Data.csv")
 
-
+#Basic summary of the dataset from the website, California Department of Education
 #"The 2005 API (Academic Performance Index) summarizes a school's, an LEA's (local educational agency, is a school district or county office of education), or the state's performance on the spring 2005 Standardized Testing and Reporting (STAR) Program and 2005 California High School Exit Examination (CAHSEE)."
 #"The 2005 API Base summarizes a subgroup's (e.g STAR Program scores, Ethnic/racial subgroup/ parents' degrees/ English Learners ...) performance on the spring 2005 STAR Program and 2005 CAHSEE. It serves as the baseline score, or starting point, of performance of that subgroup"
 
 #Therefore, we are going to remove those variables that are created by our dependent variable such as SIM_RANK, ST_RANK
-#we are also going to remove one of the variable, RTYPE or STYPE, since they are overlapping
+#we are also going to remove one of the variable, RTYPE or STYPE because they are overlapping each other. 
 
 Base05<-select(Base05,c(-"RTYPE", -"SIM_RANK",-"ST_RANK"))
 
@@ -319,7 +319,7 @@ new.base[81:96] %>% keep(is.numeric) %>% gather() %>%
 
 ```r
 #most of our independent numerical variables are highly skewed
-#we might want to perform log tranformation, but I will do later. 
+#we might want to perform log tranformation, but I would like to see the model before transformation, and if transformation is needed, I will perform it then. 
 ```
 
 
@@ -961,20 +961,6 @@ plot(training.newbase1)
 ```
 
 
-```r
-cor<-cor(training.newbase1)
-corrplot(cor, 
-         method=c("circle"),
-         title="Correlation between variables",
-         type=c("full"))
-```
-
-![](API-Score-Project_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
-
-```r
-#too less correlation between VCST_M911 and any others. 
-```
-
 
 ```r
 training.newbase1 %>% keep(is.numeric) %>% gather() %>%
@@ -984,7 +970,7 @@ training.newbase1 %>% keep(is.numeric) %>% gather() %>%
   geom_density()
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
 
 ```r
 #we might want to exclude the VCST_M911, but let's see how the model would be
@@ -1024,7 +1010,7 @@ summary(lm1)
 plot(lm1)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-13-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-13-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-13-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-13-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-12-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-12-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-12-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-12-4.png)<!-- -->
 
 ```r
 #adj R^2 68%, and there looks some patterns and some outliers 
@@ -1037,9 +1023,10 @@ b<-test.newbase$API05B
 
 
 plot(a,b)
+abline(0,1,col="red")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
 
 ```r
 #predicted values vs test values of API05B
@@ -1096,21 +1083,20 @@ outlierTest(lm1,n.max=50,cutoff=0.05)
 ```
 
 ```r
+#outlierTest shows which observations have greater than absolute value of 4 of rstudent. 
+
 qqPlot(lm1,main="QQ Plot")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
 
 ```
 ## [1] 3762 4152
 ```
 
-
 ```r
-avPlots(lm1)
+#shows which observations have an impact on normality of residuals - which is outliers or bad leverage points
 ```
-
-![](API-Score-Project_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
 
 
 ```r
@@ -1146,7 +1132,7 @@ influencePlot(lm1,id.method="identify",main="influential plot",sub="circle size 
 ## graphical parameter
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
 
 ```
 ##         StudRes          Hat        CookD
@@ -1154,6 +1140,10 @@ influencePlot(lm1,id.method="identify",main="influential plot",sub="circle size 
 ## 3762 -8.2313890 0.0004394439  0.005898503
 ## 4152 10.7978467 0.7062204348 55.100348069
 ## 5582 -3.5486831 0.0116954299  0.029753287
+```
+
+```r
+#Hat Values against Studentized Residuals
 ```
 
 
@@ -1164,6 +1154,7 @@ influencePlot(lm1,id.method="identify",main="influential plot",sub="circle size 
 #from Springers Text book "Linear Regression"
 
 #"In summary, an outlier is a point whose standardized residual falls outside the interval from -2 to 2. Recall that a bad leverage point is a leverage point which is also an outlier. Thus, a bad leverage point is a leverage point whose standardized residual falls outside the interval from -2 to 2."
+#In very large datasets, we apply the rule to -4 to 4. 
 
 o1<-which(rstandard(lm1, infl = lm.influence(lm1, do.coef = FALSE),
                     sd=sqrt(deviance(lm1)/df.residual(lm1)),
@@ -1217,7 +1208,7 @@ summary(lm.test1)
 plot(lm.test1)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-20-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-20-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-20-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-20-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-18-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-18-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-18-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-18-4.png)<!-- -->
 
 ```r
 #adj R^2 29.5%, plots looks ok except for normal Q-Q plot
@@ -1254,7 +1245,7 @@ summary(lm.test2)
 plot(lm.test2)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-21-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-21-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-21-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-21-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-19-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-19-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-19-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-19-4.png)<!-- -->
 
 ```r
 #adj R^2 40%, seems heteroscedasticity
@@ -1291,7 +1282,7 @@ summary(lm.test3)
 plot(lm.test3)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-22-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-22-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-22-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-22-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-20-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-20-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-20-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-20-4.png)<!-- -->
 
 ```r
 #R^2 39%, plots shows extreme heteroscedasticity
@@ -1328,7 +1319,7 @@ summary(lm.test4)
 plot(lm.test4)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-23-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-23-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-23-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-23-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-21-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-21-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-21-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-21-4.png)<!-- -->
 
 ```r
 #R^2 0.1%, plots shows extreme patterns showing heteroscedasticity
@@ -1369,7 +1360,7 @@ summary(lm2)
 plot(lm2)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-24-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-24-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-24-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-24-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-22-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-22-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-22-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-22-4.png)<!-- -->
 
 ```r
 #adj R^2 71%, plots looks ok except for showing some pattern of the heteroscedasticity. 
@@ -1414,7 +1405,7 @@ summary(lm3)
 plot(lm3)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-25-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-25-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-25-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-25-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-23-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-23-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-23-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-23-4.png)<!-- -->
 
 ```r
 #still showing some patterns, I will perform diagnosis of normality of residuals, multicollinearity, and heteroscedasticity from now. 
@@ -1453,7 +1444,7 @@ qplot(residuals(lm3),
       ylab="Frequency")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
 
 ```r
 #Residuals on our model are approximately normal distributed. 
@@ -1467,9 +1458,21 @@ qplot(residuals(lm3),
 
 #definition
 
-##In multiple regression , two or more predictor variables might be correlated with each other. This situation is referred as collinearity.
+##"In multiple regression , two or more predictor variables might be correlated with each other. This situation is referred as collinearity.
 
-#There is an extreme situation, called multicollinearity, where collinearity exists between three or more variables even if no pair of variables has a particularly high correlation. This means that there is redundancy between predictor variables.
+#There is an extreme situation, called multicollinearity, where collinearity exists between three or more variables even if no pair of variables has a particularly high correlation. This means that there is redundancy between predictor variables."
+
+cor<-cor(training.newbase3)
+corrplot(cor, 
+         method=c("circle"),
+         title="Correlation between variables",
+         type=c("full"))
+```
+
+![](API-Score-Project_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
+
+```r
+#too less correlation between VCST_M911 and any others. 
 
 vif(lm3)
 ```
@@ -1490,7 +1493,7 @@ vif(lm3)
 plot(lm3)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-29-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-29-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-29-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-29-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-27-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-27-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-27-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-27-4.png)<!-- -->
 
 ```r
 #As we see the first plot of the model (fitted value vs residuals), 
@@ -1506,7 +1509,7 @@ plot(lm3)
 bc<-boxcox(lm3)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-30-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-28-1.png)<!-- -->
 
 
 ```r
@@ -1552,7 +1555,7 @@ summary(lm4)
 plot(lm4)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-31-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-31-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-31-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-31-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-29-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-29-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-29-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-29-4.png)<!-- -->
 
 ```r
 #It looks improved. 
@@ -1571,7 +1574,7 @@ plot(a,b,
 abline(a=0,b=1,col="red")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-32-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-30-1.png)<!-- -->
 
 ```r
 plot(a1,b,
@@ -1581,7 +1584,7 @@ plot(a1,b,
 abline(a=0,b=1,col="red")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-32-2.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-30-2.png)<!-- -->
 
 ```r
 plot(a2,b,
@@ -1591,7 +1594,7 @@ plot(a2,b,
 abline(a=0,b=1,col="red")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-32-3.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-30-3.png)<!-- -->
 
 
 ```r
@@ -1675,7 +1678,7 @@ summary(lm4)
 ```r
 #Conclusion
 
-#I conclude that we are able to predict the API score for the future with the 3 of predictors, which are described at below, as 65% variance explained. 
+#I conclude that we are able to predict the API score for the future with the 3 of predictors, which are described at below, as 65% variance explained with all transformed predictors have less than 0.05 p-values, which is that they are all significant predictors on our response variable. 
 
 #As interpretation of the Betas (each coefficients), 
 #For example, 

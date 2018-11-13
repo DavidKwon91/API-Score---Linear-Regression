@@ -5,7 +5,7 @@ output:
   html_document: 
     keep_md: yes
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 ```{r}
@@ -35,12 +35,12 @@ set.seed(1234)
 
 Base05<- read.csv("/Users/DavidKwon/Desktop/Yongbock/API Score Prj/API 2005 Base Data.csv")
 
-
+#Basic summary of the dataset from the website, California Department of Education
 #"The 2005 API (Academic Performance Index) summarizes a school's, an LEA's (local educational agency, is a school district or county office of education), or the state's performance on the spring 2005 Standardized Testing and Reporting (STAR) Program and 2005 California High School Exit Examination (CAHSEE)."
 #"The 2005 API Base summarizes a subgroup's (e.g STAR Program scores, Ethnic/racial subgroup/ parents' degrees/ English Learners ...) performance on the spring 2005 STAR Program and 2005 CAHSEE. It serves as the baseline score, or starting point, of performance of that subgroup"
 
 #Therefore, we are going to remove those variables that are created by our dependent variable such as SIM_RANK, ST_RANK
-#we are also going to remove one of the variable, RTYPE or STYPE, since they are overlapping
+#we are also going to remove one of the variable, RTYPE or STYPE because they are overlapping each other. 
 
 Base05<-select(Base05,c(-"RTYPE", -"SIM_RANK",-"ST_RANK"))
 
@@ -131,8 +131,7 @@ new.base[81:96] %>% keep(is.numeric) %>% gather() %>%
 
 
 #most of our independent numerical variables are highly skewed
-#we might want to perform log tranformation, but I will do later. 
-
+#we might want to perform log tranformation, but I would like to see the model before transformation, and if transformation is needed, I will perform it then. 
 
 ```
 
@@ -246,14 +245,6 @@ plot(training.newbase1)
 
 ```
 
-```{r}
-cor<-cor(training.newbase1)
-corrplot(cor, 
-         method=c("circle"),
-         title="Correlation between variables",
-         type=c("full"))
-#too less correlation between VCST_M911 and any others. 
-```
 
 ```{r}
 training.newbase1 %>% keep(is.numeric) %>% gather() %>%
@@ -280,6 +271,7 @@ b<-test.newbase$API05B
 
 
 plot(a,b)
+abline(0,1,col="red")
 #predicted values vs test values of API05B
 #looks like linear, and some outliers
 ```
@@ -306,15 +298,15 @@ data.frame(
 #There are several ways to see outliers in our model
 outlierTest(lm1,n.max=50,cutoff=0.05)
 
-qqPlot(lm1,main="QQ Plot")
-```
+#outlierTest shows which observations have greater than absolute value of 4 of rstudent. 
 
-```{r}
-avPlots(lm1)
+qqPlot(lm1,main="QQ Plot")
+#shows which observations have an impact on normality of residuals - which is outliers or bad leverage points
 ```
 
 ```{r}
 influencePlot(lm1,id.method="identify",main="influential plot",sub="circle size is proportial to cook's distance")
+#Hat Values against Studentized Residuals
 ```
 
 ```{r}
@@ -324,6 +316,7 @@ influencePlot(lm1,id.method="identify",main="influential plot",sub="circle size 
 #from Springers Text book "Linear Regression"
 
 #"In summary, an outlier is a point whose standardized residual falls outside the interval from -2 to 2. Recall that a bad leverage point is a leverage point which is also an outlier. Thus, a bad leverage point is a leverage point whose standardized residual falls outside the interval from -2 to 2."
+#In very large datasets, we apply the rule to -4 to 4. 
 
 o1<-which(rstandard(lm1, infl = lm.influence(lm1, do.coef = FALSE),
                     sd=sqrt(deviance(lm1)/df.residual(lm1)),
@@ -432,9 +425,16 @@ qplot(residuals(lm3),
 
 #definition
 
-##In multiple regression , two or more predictor variables might be correlated with each other. This situation is referred as collinearity.
+##"In multiple regression , two or more predictor variables might be correlated with each other. This situation is referred as collinearity.
 
-#There is an extreme situation, called multicollinearity, where collinearity exists between three or more variables even if no pair of variables has a particularly high correlation. This means that there is redundancy between predictor variables.
+#There is an extreme situation, called multicollinearity, where collinearity exists between three or more variables even if no pair of variables has a particularly high correlation. This means that there is redundancy between predictor variables."
+
+cor<-cor(training.newbase3)
+corrplot(cor, 
+         method=c("circle"),
+         title="Correlation between variables",
+         type=c("full"))
+#too less correlation between VCST_M911 and any others. 
 
 vif(lm3)
 
@@ -537,7 +537,7 @@ summary(lm4)
 
 #Conclusion
 
-#I conclude that we are able to predict the API score for the future with the 3 of predictors, which are described at below, as 65% variance explained. 
+#I conclude that we are able to predict the API score for the future with the 3 of predictors, which are described at below, as 65% variance explained with all transformed predictors have less than 0.05 p-values, which is that they are all significant predictors on our response variable. 
 
 #As interpretation of the Betas (each coefficients), 
 #For example, 
