@@ -928,7 +928,7 @@ points(4, reg.summary$bic[4],col="red",cex=1,pch=20)
 
 
 ```r
-a<-names(coef(reg1,which(reg.summary$bic==reg.summary$bic[4])))
+a<-c("MEALS", "SMOB","GRAD_SCH","CW_CSTE")
 
 reg.summary$rsq[4]
 ```
@@ -946,7 +946,7 @@ reg.summary$adjr2[4]
 ```
 
 ```r
-training.newbase1<-select(training.newbase,c("API05B",a[2:5]))
+training.newbase1<-select(training.newbase,c("API05B",a))
 rownames(training.newbase1)<-1:nrow(training.newbase1)
 
 #plots between response and predictors
@@ -957,7 +957,6 @@ plot(training.newbase1)
 
 ```r
 #GRAD_SCH with others shows some curves, it looks like log graph
-#VCST_M911 seems to be too skewed
 ```
 
 
@@ -972,10 +971,6 @@ training.newbase1 %>% keep(is.numeric) %>% gather() %>%
 
 ![](API-Score-Project_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
 
-```r
-#we might want to exclude the VCST_M911, but let's see how the model would be
-```
-
 
 ```r
 lm1<-lm(API05B~., data=training.newbase1)
@@ -989,21 +984,21 @@ summary(lm1)
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -524.01  -34.74    4.39   39.43  371.32 
+## -540.30  -27.88    3.36   31.79  342.30 
 ## 
 ## Coefficients:
-##               Estimate Std. Error t value Pr(>|t|)    
-## (Intercept)  7.968e+02  2.692e+00 296.042  < 2e-16 ***
-## MEALS       -1.171e+00  3.419e-02 -34.265  < 2e-16 ***
-## SMOB        -4.205e+00  5.567e-02 -75.543  < 2e-16 ***
-## GRAD_SCH     2.652e+00  8.543e-02  31.046  < 2e-16 ***
-## VCST_M911   -3.057e-03  4.015e-04  -7.615 3.01e-14 ***
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 621.06084    4.70077  132.12   <2e-16 ***
+## MEALS        -1.52129    0.03151  -48.29   <2e-16 ***
+## SMOB         -2.90255    0.05784  -50.18   <2e-16 ***
+## GRAD_SCH      2.26144    0.07651   29.56   <2e-16 ***
+## CW_CSTE       3.78087    0.08807   42.93   <2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 63.99 on 6664 degrees of freedom
-## Multiple R-squared:  0.6846,	Adjusted R-squared:  0.6844 
-## F-statistic:  3616 on 4 and 6664 DF,  p-value: < 2.2e-16
+## Residual standard error: 56.88 on 6664 degrees of freedom
+## Multiple R-squared:  0.7508,	Adjusted R-squared:  0.7506 
+## F-statistic:  5019 on 4 and 6664 DF,  p-value: < 2.2e-16
 ```
 
 ```r
@@ -1046,11 +1041,7 @@ data.frame(
 
 ```
 ##        MSE     RMSE        R2
-## 1 4116.149 64.15722 0.6809287
-```
-
-```r
-#acceptable MSE, 68% of R^2 (68% of the variance explained)
+## 1 3097.677 55.65678 0.7599359
 ```
 
 
@@ -1065,21 +1056,26 @@ outlierTest(lm1,n.max=50,cutoff=0.05)
 
 ```
 ##       rstudent unadjusted p-value Bonferonni p
-## 4152 10.797847         5.8846e-27   3.9244e-23
-## 3762 -8.231389         2.2069e-16   1.4718e-12
-## 1452 -5.671927         1.4712e-08   9.8116e-05
-## 4680 -5.128051         3.0102e-07   2.0075e-03
-## 4812 -5.113673         3.2477e-07   2.1659e-03
-## 1356 -5.102589         3.4431e-07   2.2962e-03
-## 743  -4.993868         6.0687e-07   4.0472e-03
-## 2258  4.965982         7.0055e-07   4.6720e-03
-## 2700 -4.911503         9.2536e-07   6.1712e-03
-## 3364 -4.791230         1.6935e-06   1.1294e-02
-## 3944 -4.708948         2.5404e-06   1.6942e-02
-## 5605 -4.590720         4.4982e-06   2.9999e-02
-## 1465 -4.580471         4.7237e-06   3.1502e-02
-## 3924 -4.567243         5.0307e-06   3.3550e-02
-## 488  -4.555222         5.3262e-06   3.5521e-02
+## 3762 -9.564767         1.5455e-21   1.0307e-17
+## 1356 -6.105577         1.0819e-09   7.2152e-06
+## 4812 -6.078444         1.2806e-09   8.5402e-06
+## 2258  6.049796         1.5289e-09   1.0196e-05
+## 3944 -5.831300         5.7572e-09   3.8395e-05
+## 3364 -5.468623         4.7001e-08   3.1345e-04
+## 743  -5.353180         8.9307e-08   5.9559e-04
+## 2410  5.286745         1.2847e-07   8.5676e-04
+## 2700 -5.187371         2.1958e-07   1.4644e-03
+## 1452 -5.084014         3.7962e-07   2.5317e-03
+## 1573 -4.945453         7.7827e-07   5.1903e-03
+## 4680 -4.837192         1.3464e-06   8.9795e-03
+## 4743 -4.756764         2.0086e-06   1.3396e-02
+## 2314 -4.695724         2.7098e-06   1.8072e-02
+## 488  -4.675050         2.9967e-06   1.9985e-02
+## 2646  4.674809         3.0002e-06   2.0008e-02
+## 5849 -4.635340         3.6314e-06   2.4218e-02
+## 1118  4.612801         4.0470e-06   2.6990e-02
+## 2054  4.512308         6.5227e-06   4.3500e-02
+## 2143 -4.484455         7.4326e-06   4.9568e-02
 ```
 
 ```r
@@ -1091,7 +1087,7 @@ qqPlot(lm1,main="QQ Plot")
 ![](API-Score-Project_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
 
 ```
-## [1] 3762 4152
+## [1] 1356 3762
 ```
 
 ```r
@@ -1135,11 +1131,12 @@ influencePlot(lm1,id.method="identify",main="influential plot",sub="circle size 
 ![](API-Score-Project_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
 
 ```
-##         StudRes          Hat        CookD
-## 1797  0.9614079 0.0228222701  0.004317532
-## 3762 -8.2313890 0.0004394439  0.005898503
-## 4152 10.7978467 0.7062204348 55.100348069
-## 5582 -3.5486831 0.0116954299  0.029753287
+##        StudRes          Hat       CookD
+## 1356 -6.105577 0.0041423445 0.030844268
+## 2158 -3.624570 0.0117503290 0.031184299
+## 2258  6.049796 0.0053462040 0.039135526
+## 3762 -9.564767 0.0004855073 0.008768559
+## 5582 -3.671075 0.0117526656 0.031994464
 ```
 
 ```r
@@ -1170,7 +1167,7 @@ length(outliers)
 ```
 
 ```
-## [1] 26
+## [1] 36
 ```
 
 
@@ -1190,18 +1187,18 @@ summary(lm.test1)
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -459.73  -32.82   18.13   58.80  260.49 
+## -459.85  -32.83   18.05   58.69  260.33 
 ## 
 ## Coefficients:
-##             Estimate Std. Error t value Pr(>|t|)    
-## (Intercept) 821.0938     2.2436  365.98   <2e-16 ***
-## MEALS        -2.0261     0.0384  -52.76   <2e-16 ***
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 821.21233    2.23874  366.82   <2e-16 ***
+## MEALS        -2.02565    0.03833  -52.84   <2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 94.57 on 6641 degrees of freedom
-## Multiple R-squared:  0.2954,	Adjusted R-squared:  0.2953 
-## F-statistic:  2784 on 1 and 6641 DF,  p-value: < 2.2e-16
+## Residual standard error: 94.34 on 6631 degrees of freedom
+## Multiple R-squared:  0.2963,	Adjusted R-squared:  0.2962 
+## F-statistic:  2792 on 1 and 6631 DF,  p-value: < 2.2e-16
 ```
 
 ```r
@@ -1211,7 +1208,7 @@ plot(lm.test1)
 ![](API-Score-Project_files/figure-html/unnamed-chunk-18-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-18-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-18-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-18-4.png)<!-- -->
 
 ```r
-#adj R^2 29.5%, plots looks ok except for normal Q-Q plot
+#adj R^2 29.6%, plots looks ok except for normal Q-Q plot
 ```
 
 
@@ -1227,18 +1224,18 @@ summary(lm.test2)
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -323.52  -60.06   -2.04   60.88  349.29 
+## -323.53  -59.63   -2.25   60.70  351.42 
 ## 
 ## Coefficients:
 ##              Estimate Std. Error t value Pr(>|t|)    
-## (Intercept) 773.80476    1.33624  579.09   <2e-16 ***
-## SMOB         -4.92018    0.07328  -67.14   <2e-16 ***
+## (Intercept) 774.11173    1.33456  580.05   <2e-16 ***
+## SMOB         -4.95317    0.07364  -67.26   <2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 86.95 on 6641 degrees of freedom
-## Multiple R-squared:  0.4044,	Adjusted R-squared:  0.4043 
-## F-statistic:  4508 on 1 and 6641 DF,  p-value: < 2.2e-16
+## Residual standard error: 86.71 on 6631 degrees of freedom
+## Multiple R-squared:  0.4056,	Adjusted R-squared:  0.4055 
+## F-statistic:  4524 on 1 and 6631 DF,  p-value: < 2.2e-16
 ```
 
 ```r
@@ -1264,18 +1261,18 @@ summary(lm.test3)
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -422.22  -38.53   11.09   56.84  288.16 
+## -423.04  -38.67   10.97   56.64  288.02 
 ## 
 ## Coefficients:
 ##              Estimate Std. Error t value Pr(>|t|)    
-## (Intercept) 660.47007    1.40685  469.47   <2e-16 ***
-## GRAD_SCH      5.68746    0.08678   65.54   <2e-16 ***
+## (Intercept) 660.58650    1.40222  471.10   <2e-16 ***
+## GRAD_SCH      5.69449    0.08647   65.86   <2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 87.79 on 6641 degrees of freedom
-## Multiple R-squared:  0.3928,	Adjusted R-squared:  0.3927 
-## F-statistic:  4296 on 1 and 6641 DF,  p-value: < 2.2e-16
+## Residual standard error: 87.44 on 6631 degrees of freedom
+## Multiple R-squared:  0.3954,	Adjusted R-squared:  0.3953 
+## F-statistic:  4337 on 1 and 6631 DF,  p-value: < 2.2e-16
 ```
 
 ```r
@@ -1285,34 +1282,34 @@ plot(lm.test3)
 ![](API-Score-Project_files/figure-html/unnamed-chunk-20-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-20-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-20-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-20-4.png)<!-- -->
 
 ```r
-#R^2 39%, plots shows extreme heteroscedasticity
+#R^2 39.5%, plots shows extreme heteroscedasticity
 ```
 
 
 ```r
-lm.test4<-lm(API05B~VCST_M911, data=training.newbase2)
+lm.test4<-lm(API05B~CW_CSTE, data=training.newbase2)
 summary(lm.test4)
 ```
 
 ```
 ## 
 ## Call:
-## lm(formula = API05B ~ VCST_M911, data = training.newbase2)
+## lm(formula = API05B ~ CW_CSTE, data = training.newbase2)
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -448.63  -63.67    4.33   76.33  277.33 
+## -411.25  -69.79    0.66   70.67  326.49 
 ## 
 ## Coefficients:
-##               Estimate Std. Error t value Pr(>|t|)    
-## (Intercept) 720.673180   1.420456 507.353  < 2e-16 ***
-## VCST_M911    -0.003498   0.001295  -2.701  0.00692 ** 
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 456.9592     6.2326   73.32   <2e-16 ***
+## CW_CSTE       5.4549     0.1268   43.03   <2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 112.6 on 6641 degrees of freedom
-## Multiple R-squared:  0.001098,	Adjusted R-squared:  0.0009472 
-## F-statistic: 7.297 on 1 and 6641 DF,  p-value: 0.006924
+## Residual standard error: 99.43 on 6631 degrees of freedom
+## Multiple R-squared:  0.2183,	Adjusted R-squared:  0.2182 
+## F-statistic:  1852 on 1 and 6631 DF,  p-value: < 2.2e-16
 ```
 
 ```r
@@ -1322,7 +1319,7 @@ plot(lm.test4)
 ![](API-Score-Project_files/figure-html/unnamed-chunk-21-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-21-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-21-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-21-4.png)<!-- -->
 
 ```r
-#R^2 0.1%, plots shows extreme patterns showing heteroscedasticity
+#R^2 21.8%, plots shows some patterns showing heteroscedasticity
 ```
 
 
@@ -1339,21 +1336,21 @@ summary(lm2)
 ## 
 ## Residuals:
 ##      Min       1Q   Median       3Q      Max 
-## -252.496  -34.327    3.441   37.821  248.200 
+## -225.373  -28.309    2.242   30.659  230.408 
 ## 
 ## Coefficients:
-##               Estimate Std. Error t value Pr(>|t|)    
-## (Intercept)  8.044e+02  2.590e+00  310.63   <2e-16 ***
-## MEALS       -1.239e+00  3.266e-02  -37.94   <2e-16 ***
-## SMOB        -4.259e+00  5.313e-02  -80.16   <2e-16 ***
-## GRAD_SCH     2.555e+00  8.143e-02   31.38   <2e-16 ***
-## VCST_M911   -9.973e-03  7.023e-04  -14.20   <2e-16 ***
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 623.13764    4.40548  141.45   <2e-16 ***
+## MEALS        -1.56062    0.02955  -52.81   <2e-16 ***
+## SMOB         -2.95763    0.05448  -54.29   <2e-16 ***
+## GRAD_SCH      2.21507    0.07178   30.86   <2e-16 ***
+## CW_CSTE       3.81710    0.08252   46.26   <2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 60.66 on 6638 degrees of freedom
-## Multiple R-squared:  0.7102,	Adjusted R-squared:   0.71 
-## F-statistic:  4067 on 4 and 6638 DF,  p-value: < 2.2e-16
+## Residual standard error: 53.11 on 6628 degrees of freedom
+## Multiple R-squared:  0.777,	Adjusted R-squared:  0.7769 
+## F-statistic:  5775 on 4 and 6628 DF,  p-value: < 2.2e-16
 ```
 
 ```r
@@ -1363,59 +1360,18 @@ plot(lm2)
 ![](API-Score-Project_files/figure-html/unnamed-chunk-22-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-22-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-22-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-22-4.png)<!-- -->
 
 ```r
-#adj R^2 71%, plots looks ok except for showing some pattern of the heteroscedasticity. 
-```
-
-
-```r
-#I decide to drop the VCST_M911
+#adj R^2 77%, plots looks ok except for showing some pattern of the heteroscedasticity. 
 
 #R^2 getting higher, plots for model such as 'fitted values vs residuals', 'Normal Q-Q', or 'sqrt of Standardized residuals vs fitted values' becomes much better after removing outliers
 
-training.newbase3<-select(training.newbase2, -c("VCST_M911"))
-
-lm3<-lm(API05B~., data=training.newbase3)
-summary(lm3)
-```
-
-```
-## 
-## Call:
-## lm(formula = API05B ~ ., data = training.newbase3)
-## 
-## Residuals:
-##      Min       1Q   Median       3Q      Max 
-## -250.273  -36.079    3.853   39.130  246.257 
-## 
-## Coefficients:
-##              Estimate Std. Error t value Pr(>|t|)    
-## (Intercept) 798.20643    2.59092  308.08   <2e-16 ***
-## MEALS        -1.19113    0.03297  -36.13   <2e-16 ***
-## SMOB         -4.21369    0.05383  -78.27   <2e-16 ***
-## GRAD_SCH      2.62762    0.08249   31.85   <2e-16 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## Residual standard error: 61.57 on 6639 degrees of freedom
-## Multiple R-squared:  0.7014,	Adjusted R-squared:  0.7013 
-## F-statistic:  5198 on 3 and 6639 DF,  p-value: < 2.2e-16
-```
-
-```r
-plot(lm3)
-```
-
-![](API-Score-Project_files/figure-html/unnamed-chunk-23-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-23-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-23-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-23-4.png)<!-- -->
-
-```r
 #still showing some patterns, I will perform diagnosis of normality of residuals, multicollinearity, and heteroscedasticity from now. 
 ```
 
 
 ```r
-a1<-predict(lm3,newdata = test.newbase)
+a1<-predict(lm2,newdata = test.newbase)
 
-predictions2 <- lm3 %>% predict(test.newbase)
+predictions2 <- lm2 %>% predict(test.newbase)
 # Model performance
 data.frame(
   MSE = mse(test.newbase$API05B, predictions2),
@@ -1426,7 +1382,7 @@ data.frame(
 
 ```
 ##        MSE     RMSE        R2
-## 1 4185.408 64.69473 0.6756477
+## 1 3097.117 55.65174 0.7598707
 ```
 
 
@@ -1436,7 +1392,7 @@ data.frame(
 #We don't have to worry about the assumption of normality of residuals (the error between the dependent variable and the independent variables) because when the sample size is sufficiently large, the Central Limit Theorem ensures that the distribution of residiual will be approximately normality. 
 
 
-qplot(residuals(lm3),
+qplot(residuals(lm2),
       geom="histogram",
       binwidth= 10,
       main="Histogram of Residuals of our model",
@@ -1444,7 +1400,7 @@ qplot(residuals(lm3),
       ylab="Frequency")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
 
 ```r
 #Residuals on our model are approximately normal distributed. 
@@ -1462,24 +1418,24 @@ qplot(residuals(lm3),
 
 #There is an extreme situation, called multicollinearity, where collinearity exists between three or more variables even if no pair of variables has a particularly high correlation. This means that there is redundancy between predictor variables."
 
-cor<-cor(training.newbase3)
+cor<-cor(training.newbase2)
 corrplot(cor, 
          method=c("circle"),
          title="Correlation between variables",
          type=c("full"))
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
 
 ```r
 #too less correlation between VCST_M911 and any others. 
 
-vif(lm3)
+vif(lm2)
 ```
 
 ```
-##    MEALS     SMOB GRAD_SCH 
-## 1.738969 1.076189 1.837037
+##    MEALS     SMOB GRAD_SCH  CW_CSTE 
+## 1.874570 1.458532 1.867840 1.485354
 ```
 
 ```r
@@ -1490,14 +1446,15 @@ vif(lm3)
 ```r
 ##########heteroscedasciticity (non-constant residuals)
 
-plot(lm3)
+plot(lm2)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-27-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-27-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-27-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-27-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-26-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-26-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-26-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-26-4.png)<!-- -->
 
 ```r
 #As we see the first plot of the model (fitted value vs residuals), 
-#it seems like there's heteroscedasticity exists, so I'm going to perform transformation. 
+#the residuals plots look fine except for decreasing variance towards the right end.
+#It seems like there's heteroscedasticity exists, so I'm going to perform transformation. 
 ```
 
 
@@ -1506,10 +1463,10 @@ plot(lm3)
 #box-cox
 
 
-bc<-boxcox(lm3)
+bc<-boxcox(lm2)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-28-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
 
 
 ```r
@@ -1523,39 +1480,40 @@ lambda
 
 ```r
 #boxcox + log transformation
-lm4<-lm((API05B)^(lambda)~log(MEALS+1)+log(SMOB+1)+log(GRAD_SCH+1), data=training.newbase3)
-summary(lm4)
+lm3<-lm(API05B^(lambda)~MEALS+log(SMOB+1)+log(GRAD_SCH+1)+CW_CSTE, data=training.newbase2)
+summary(lm3)
 ```
 
 ```
 ## 
 ## Call:
-## lm(formula = (API05B)^(lambda) ~ log(MEALS + 1) + log(SMOB + 
-##     1) + log(GRAD_SCH + 1), data = training.newbase3)
+## lm(formula = API05B^(lambda) ~ MEALS + log(SMOB + 1) + log(GRAD_SCH + 
+##     1) + CW_CSTE, data = training.newbase2)
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -510833  -59447    3296   62040  372286 
+## -327955  -44794     605   46969  327029 
 ## 
 ## Coefficients:
-##                   Estimate Std. Error t value Pr(>|t|)    
-## (Intercept)         754738       8669   87.06   <2e-16 ***
-## log(MEALS + 1)      -36637       1494  -24.52   <2e-16 ***
-## log(SMOB + 1)       -90148       1529  -58.95   <2e-16 ***
-## log(GRAD_SCH + 1)    49966       1540   32.44   <2e-16 ***
+##                    Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)       398321.29    7812.70   50.98   <2e-16 ***
+## MEALS              -2127.65      44.86  -47.42   <2e-16 ***
+## log(SMOB + 1)     -61332.05    1362.81  -45.00   <2e-16 ***
+## log(GRAD_SCH + 1)  35881.42    1350.71   26.57   <2e-16 ***
+## CW_CSTE             6170.79     109.67   56.27   <2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 92650 on 6639 degrees of freedom
-## Multiple R-squared:  0.6506,	Adjusted R-squared:  0.6505 
-## F-statistic:  4122 on 3 and 6639 DF,  p-value: < 2.2e-16
+## Residual standard error: 75390 on 6628 degrees of freedom
+## Multiple R-squared:  0.7682,	Adjusted R-squared:  0.7681 
+## F-statistic:  5491 on 4 and 6628 DF,  p-value: < 2.2e-16
 ```
 
 ```r
-plot(lm4)
+plot(lm3)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-29-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-29-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-29-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-29-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-28-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-28-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-28-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-28-4.png)<!-- -->
 
 ```r
 #It looks improved. 
@@ -1563,7 +1521,7 @@ plot(lm4)
 
 
 ```r
-a2<-sqrt(predict(lm4,newdata = test.newbase))
+a2<-sqrt(predict(lm3,newdata = test.newbase))
 
 #Model Progress as graph
 
@@ -1574,7 +1532,7 @@ plot(a,b,
 abline(a=0,b=1,col="red")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-30-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-29-1.png)<!-- -->
 
 ```r
 plot(a1,b,
@@ -1584,7 +1542,7 @@ plot(a1,b,
 abline(a=0,b=1,col="red")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-30-2.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-29-2.png)<!-- -->
 
 ```r
 plot(a2,b,
@@ -1594,11 +1552,11 @@ plot(a2,b,
 abline(a=0,b=1,col="red")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-30-3.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-29-3.png)<!-- -->
 
 
 ```r
-predictions3 <- lm4 %>% predict(test.newbase)
+predictions3 <- lm3 %>% predict(test.newbase)
 
 # Model performance
 data.frame(
@@ -1610,7 +1568,7 @@ data.frame(
 
 ```
 ##            MSE     RMSE        R2
-## 1 297400280996 545344.2 0.6135713
+## 1 298721055021 546553.8 0.7477782
 ```
 
 
@@ -1641,55 +1599,63 @@ c.m
 
 ```
 ##                                           MSE         RMSE        R2
-## First model                      4.116149e+03     64.15722 0.6809287
-## Removed Outliers                 4.185408e+03     64.69473 0.6756477
-## After transformation-final model 2.974003e+11 545344.18581 0.6135713
+## First model                      3.097677e+03     55.65678 0.7599359
+## Removed Outliers                 3.097117e+03     55.65174 0.7598707
+## After transformation-final model 2.987211e+11 546553.79884 0.7477782
 ```
 
 
 ```r
-summary(lm4)
+summary(lm3)
 ```
 
 ```
 ## 
 ## Call:
-## lm(formula = (API05B)^(lambda) ~ log(MEALS + 1) + log(SMOB + 
-##     1) + log(GRAD_SCH + 1), data = training.newbase3)
+## lm(formula = API05B^(lambda) ~ MEALS + log(SMOB + 1) + log(GRAD_SCH + 
+##     1) + CW_CSTE, data = training.newbase2)
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -510833  -59447    3296   62040  372286 
+## -327955  -44794     605   46969  327029 
 ## 
 ## Coefficients:
-##                   Estimate Std. Error t value Pr(>|t|)    
-## (Intercept)         754738       8669   87.06   <2e-16 ***
-## log(MEALS + 1)      -36637       1494  -24.52   <2e-16 ***
-## log(SMOB + 1)       -90148       1529  -58.95   <2e-16 ***
-## log(GRAD_SCH + 1)    49966       1540   32.44   <2e-16 ***
+##                    Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)       398321.29    7812.70   50.98   <2e-16 ***
+## MEALS              -2127.65      44.86  -47.42   <2e-16 ***
+## log(SMOB + 1)     -61332.05    1362.81  -45.00   <2e-16 ***
+## log(GRAD_SCH + 1)  35881.42    1350.71   26.57   <2e-16 ***
+## CW_CSTE             6170.79     109.67   56.27   <2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 92650 on 6639 degrees of freedom
-## Multiple R-squared:  0.6506,	Adjusted R-squared:  0.6505 
-## F-statistic:  4122 on 3 and 6639 DF,  p-value: < 2.2e-16
+## Residual standard error: 75390 on 6628 degrees of freedom
+## Multiple R-squared:  0.7682,	Adjusted R-squared:  0.7681 
+## F-statistic:  5491 on 4 and 6628 DF,  p-value: < 2.2e-16
 ```
 
 ```r
 #Conclusion
 
-#I conclude that we are able to predict the API score for the future with the 3 of predictors, which are described at below, as 65% variance explained with all transformed predictors have less than 0.05 p-values, which is that they are all significant predictors on our response variable. 
+#I conclude that we are able to predict the API score for the future with the 3 of predictors, which are described at below, as 76.8% variance explained with all transformed predictors have less than 0.05 p-values, which is that they are all significant predictors on our response variable. 
 
 #As interpretation of the Betas (each coefficients), 
+
 #For example, 
-#for a 10% increase in GRAD_SCH, Beta3 * log(1.1+1) = 49966 * log(1.1+1) = 37071.64.
+#for a 10% increase in GRAD_SCH, Beta3 * log(1.1+1) = 35881.42 * log(1.1+1) = 26621.77.
 #API score is transformed with lambda, which is power to the 2, from box-cox transformation, 
 
-#Therefore, sqrt(Beta3 * log(1.1+1)) = sqrt(49966 * log(1.1+1)) = 192.54 increase in API05B score
+#Therefore, Beta3 * log(1.1+1)) = 35881.42 * log(1.1+1) = 26621.77 increase in squared API05B score
+
 #In other words, 1 percent change in GRAD_SCH is associated with Beta3 * log(201/100) change in (API05B)^(lambda), where lambda is 2
 
 
-#For a 1% increase in SMOB, abs(Beta1) * log(2.01) = 36637*log(2.01) = 25577.56 
-#Therefore, sqrt(abs(Beta1)*log(2.01)) = sqrt(36637 * log(2.01)) = 159.92 decrease in API05B score
+#For a 1% increase in SMOB, abs(Beta1) * log(2.01) = 61332.05*log(2.01) = 42818.66 
+#Therefore, abs(Beta1)*log(2.01) = 61332.05 * log(2.01) = 42818.66 decrease in squared API05B score
+
 #In other words, 1 percent change in SMOB is associated with abs(Beta1) * log(201/100) change in (API05B)^(lambda), where lambda is 2
+
+#For a 1 units increase in MEALS, abs(Beta1) = 2127.65 decrease in squared API05B score
+
+#For a 10 units increase in CW_CSTE, Beta4*10 = 6170.79*10 = 61707.9 increase in sqaured API05B score
 ```

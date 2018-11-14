@@ -31,6 +31,7 @@ library(purrr) #keep
 library(ModelMetrics) #mse
 library(corrplot)
 
+
 set.seed(1234)
 
 Base05<- read.csv("/Users/DavidKwon/Desktop/Yongbock/API Score Prj/API 2005 Base Data.csv")
@@ -228,20 +229,20 @@ points(4, reg.summary$bic[4],col="red",cex=1,pch=20)
 ```
 
 ```{r}
-a<-names(coef(reg1,which(reg.summary$bic==reg.summary$bic[4])))
+a<-c("MEALS", "SMOB","GRAD_SCH","CW_CSTE")
 
 reg.summary$rsq[4]
 reg.summary$adjr2[4]
 
 
-training.newbase1<-select(training.newbase,c("API05B",a[2:5]))
+training.newbase1<-select(training.newbase,c("API05B",a))
 rownames(training.newbase1)<-1:nrow(training.newbase1)
 
 #plots between response and predictors
 plot(training.newbase1)
 
 #GRAD_SCH with others shows some curves, it looks like log graph
-#VCST_M911 seems to be too skewed
+
 
 ```
 
@@ -253,7 +254,6 @@ training.newbase1 %>% keep(is.numeric) %>% gather() %>%
   geom_histogram(bins=30)+
   geom_density()
 
-#we might want to exclude the VCST_M911, but let's see how the model would be
 ```
 
 ```{r}
@@ -284,9 +284,6 @@ data.frame(
   RMSE = RMSE(predictions1, test.newbase$API05B),
   R2 = R2(predictions1, test.newbase$API05B)
 )
-
-#acceptable MSE, 68% of R^2 (68% of the variance explained)
-
 
 ```
 
@@ -340,7 +337,7 @@ lm.test1<-lm(API05B~MEALS, data=training.newbase2)
 summary(lm.test1)
 
 plot(lm.test1)
-#adj R^2 29.5%, plots looks ok except for normal Q-Q plot
+#adj R^2 29.6%, plots looks ok except for normal Q-Q plot
 ```
 
 ```{r}
@@ -354,14 +351,14 @@ plot(lm.test2)
 lm.test3<-lm(API05B~GRAD_SCH, data=training.newbase2)
 summary(lm.test3)
 plot(lm.test3)
-#R^2 39%, plots shows extreme heteroscedasticity
+#R^2 39.5%, plots shows extreme heteroscedasticity
 ```
 
 ```{r}
-lm.test4<-lm(API05B~VCST_M911, data=training.newbase2)
+lm.test4<-lm(API05B~CW_CSTE, data=training.newbase2)
 summary(lm.test4)
 plot(lm.test4)
-#R^2 0.1%, plots shows extreme patterns showing heteroscedasticity
+#R^2 21.8%, plots shows some patterns showing heteroscedasticity
 ```
 
 ```{r}
@@ -370,27 +367,17 @@ lm2<-lm(API05B~., data=training.newbase2)
 summary(lm2)
 plot(lm2)
 
-#adj R^2 71%, plots looks ok except for showing some pattern of the heteroscedasticity. 
-```
-
-```{r}
-#I decide to drop the VCST_M911
+#adj R^2 77%, plots looks ok except for showing some pattern of the heteroscedasticity. 
 
 #R^2 getting higher, plots for model such as 'fitted values vs residuals', 'Normal Q-Q', or 'sqrt of Standardized residuals vs fitted values' becomes much better after removing outliers
-
-training.newbase3<-select(training.newbase2, -c("VCST_M911"))
-
-lm3<-lm(API05B~., data=training.newbase3)
-summary(lm3)
-plot(lm3)
 
 #still showing some patterns, I will perform diagnosis of normality of residuals, multicollinearity, and heteroscedasticity from now. 
 ```
 
 ```{r}
-a1<-predict(lm3,newdata = test.newbase)
+a1<-predict(lm2,newdata = test.newbase)
 
-predictions2 <- lm3 %>% predict(test.newbase)
+predictions2 <- lm2 %>% predict(test.newbase)
 # Model performance
 data.frame(
   MSE = mse(test.newbase$API05B, predictions2),
@@ -406,7 +393,7 @@ data.frame(
 #We don't have to worry about the assumption of normality of residuals (the error between the dependent variable and the independent variables) because when the sample size is sufficiently large, the Central Limit Theorem ensures that the distribution of residiual will be approximately normality. 
 
 
-qplot(residuals(lm3),
+qplot(residuals(lm2),
       geom="histogram",
       binwidth= 10,
       main="Histogram of Residuals of our model",
@@ -429,14 +416,14 @@ qplot(residuals(lm3),
 
 #There is an extreme situation, called multicollinearity, where collinearity exists between three or more variables even if no pair of variables has a particularly high correlation. This means that there is redundancy between predictor variables."
 
-cor<-cor(training.newbase3)
+cor<-cor(training.newbase2)
 corrplot(cor, 
          method=c("circle"),
          title="Correlation between variables",
          type=c("full"))
 #too less correlation between VCST_M911 and any others. 
 
-vif(lm3)
+vif(lm2)
 
 #More than 4 VIF score must be removed, but we dont have any.
 ```
@@ -444,10 +431,11 @@ vif(lm3)
 ```{r}
 ##########heteroscedasciticity (non-constant residuals)
 
-plot(lm3)
+plot(lm2)
 
 #As we see the first plot of the model (fitted value vs residuals), 
-#it seems like there's heteroscedasticity exists, so I'm going to perform transformation. 
+#the residuals plots look fine except for decreasing variance towards the right end.
+#It seems like there's heteroscedasticity exists, so I'm going to perform transformation. 
 
 ```
 
@@ -456,7 +444,7 @@ plot(lm3)
 #box-cox
 
 
-bc<-boxcox(lm3)
+bc<-boxcox(lm2)
 ```
 
 ```{r}
@@ -464,17 +452,17 @@ lambda<-bc$x[which.max(bc$y)]
 lambda
 
 #boxcox + log transformation
-lm4<-lm((API05B)^(lambda)~log(MEALS+1)+log(SMOB+1)+log(GRAD_SCH+1), data=training.newbase3)
-summary(lm4)
+lm3<-lm(API05B^(lambda)~MEALS+log(SMOB+1)+log(GRAD_SCH+1)+CW_CSTE, data=training.newbase2)
+summary(lm3)
 
-plot(lm4)
+plot(lm3)
 
 #It looks improved. 
 ```
 
 ```{r}
 
-a2<-sqrt(predict(lm4,newdata = test.newbase))
+a2<-sqrt(predict(lm3,newdata = test.newbase))
 
 #Model Progress as graph
 
@@ -497,7 +485,7 @@ abline(a=0,b=1,col="red")
 ```
 
 ```{r}
-predictions3 <- lm4 %>% predict(test.newbase)
+predictions3 <- lm3 %>% predict(test.newbase)
 
 # Model performance
 data.frame(
@@ -533,26 +521,31 @@ c.m
 ```
 
 ```{r}
-summary(lm4)
+summary(lm3)
 
 #Conclusion
 
-#I conclude that we are able to predict the API score for the future with the 3 of predictors, which are described at below, as 65% variance explained with all transformed predictors have less than 0.05 p-values, which is that they are all significant predictors on our response variable. 
+#I conclude that we are able to predict the API score for the future with the 3 of predictors, which are described at below, as 76.8% variance explained with all transformed predictors have less than 0.05 p-values, which is that they are all significant predictors on our response variable. 
 
 #As interpretation of the Betas (each coefficients), 
+
 #For example, 
-#for a 10% increase in GRAD_SCH, Beta3 * log(1.1+1) = 49966 * log(1.1+1) = 37071.64.
+#for a 10% increase in GRAD_SCH, Beta3 * log(1.1+1) = 35881.42 * log(1.1+1) = 26621.77.
 #API score is transformed with lambda, which is power to the 2, from box-cox transformation, 
 
-#Therefore, sqrt(Beta3 * log(1.1+1)) = sqrt(49966 * log(1.1+1)) = 192.54 increase in API05B score
+#Therefore, Beta3 * log(1.1+1)) = 35881.42 * log(1.1+1) = 26621.77 increase in squared API05B score
+
 #In other words, 1 percent change in GRAD_SCH is associated with Beta3 * log(201/100) change in (API05B)^(lambda), where lambda is 2
 
 
-#For a 1% increase in SMOB, abs(Beta1) * log(2.01) = 36637*log(2.01) = 25577.56 
-#Therefore, sqrt(abs(Beta1)*log(2.01)) = sqrt(36637 * log(2.01)) = 159.92 decrease in API05B score
+#For a 1% increase in SMOB, abs(Beta1) * log(2.01) = 61332.05*log(2.01) = 42818.66 
+#Therefore, abs(Beta1)*log(2.01) = 61332.05 * log(2.01) = 42818.66 decrease in squared API05B score
+
 #In other words, 1 percent change in SMOB is associated with abs(Beta1) * log(201/100) change in (API05B)^(lambda), where lambda is 2
 
+#For a 1 units increase in MEALS, abs(Beta1) = 2127.65 decrease in squared API05B score
 
+#For a 10 units increase in CW_CSTE, Beta4*10 = 6170.79*10 = 61707.9 increase in sqaured API05B score
 
 
 
