@@ -1,5 +1,5 @@
 ---
-title: "API Score Prject"
+title: "API Score Project"
 author: "David (Yongbock) Kwon"
 output:
   html_document: 
@@ -9,12 +9,13 @@ editor_options:
 ---
 
 
+
+####Predicting Academic Performance Index (API) Score 
+####from California Department of Eduaction 
+####through Linear Regression
+
+
 ```r
-##Predicting Academic Performance Index (API) Score 
-#from California Department of Eduaction 
-#through Linear Regression
-
-
 library(car) #cross validation
 ```
 
@@ -180,23 +181,32 @@ library(corrplot)
 set.seed(1234)
 
 Base05<- read.csv("/Users/DavidKwon/Desktop/Yongbock/API Score Prj/API 2005 Base Data.csv")
+```
 
-#Basic summary of the dataset from the website, California Department of Education
-#"The 2005 API (Academic Performance Index) summarizes a school's, an LEA's (local educational agency, is a school district or county office of education), or the state's performance on the spring 2005 Standardized Testing and Reporting (STAR) Program and 2005 California High School Exit Examination (CAHSEE)."
-#"The 2005 API Base summarizes a subgroup's (e.g STAR Program scores, Ethnic/racial subgroup/ parents' degrees/ English Learners ...) performance on the spring 2005 STAR Program and 2005 CAHSEE. It serves as the baseline score, or starting point, of performance of that subgroup"
 
-#Therefore, we are going to remove those variables that are created by our dependent variable such as SIM_RANK, ST_RANK
-#we are also going to remove one of the variable, RTYPE or STYPE because they are overlapping each other. 
+####Basic summary of the dataset from the website, California Department of Education
+#####"The 2005 API (Academic Performance Index) summarizes a school's, an LEA's (local educational agency, is a school district or county office of education), or the state's performance on the spring 2005 Standardized Testing and Reporting (STAR) Program and 2005 California High School Exit Examination (CAHSEE)."
+#####"The 2005 API Base summarizes a subgroup's (e.g STAR Program scores, Ethnic/racial subgroup/ parents' degrees/ English Learners ...) performance on the spring 2005 STAR Program and 2005 CAHSEE. It serves as the baseline score, or starting point, of performance of that subgroup"
 
+#####Therefore, we are going to remove those variables that are created by our dependent variable such as SIM_RANK, ST_RANK
+#####I am also going to remove one of the variable, RTYPE or STYPE because they are overlapping each other. 
+
+
+```r
 Base05<-select(Base05,c(-"RTYPE", -"SIM_RANK",-"ST_RANK"))
+```
 
-#find NAs rows of the dependent variables and removes the rows that includes NAs
+#####Finding NAs rows of the dependent variables and removes the rows that includes NAs
 
+
+```r
 Base05<-Base05[-which(is.na(Base05$API05B)),] 
+```
+
+#####Creating function that finds NAs for each variables 
 
 
-#creating function that finds NAs for each variables 
-
+```r
 findingNA<-function(x){
   length(which(is.na(x)))/length(x)
 }
@@ -220,19 +230,23 @@ for(i in 1:dim(Base05)[2]){
 ## [1] 66
 ```
 
-```r
-#we are going to remove the variables that have 10% of the elements is NAs 
-#I also removed the "X" variable (school or district code), which is 1
 
+#####I am going to remove the variables that have 10% of the elements is NAs 
+#####I also removed the "X" variable (school or district code), which is 1st column
+
+
+```r
 newbase<-Base05[,c(-1, -3, -4, -5, -42, -46, -47, -48, -66)]
 
 new.base<-newbase[complete.cases(newbase),]
+```
+
+#####lets explore our dependent variable with ggplot
+
+###Histogram of our dependent variable
 
 
-
-#lets explore our dependent variable with ggplot
-
-###histogram
+```r
 ggplot(data=new.base, aes(new.base$API05B)) + 
   geom_histogram(aes(y=..density..), binwidth=10) +
   geom_density(aes(y=..density..), color="red")+
@@ -241,17 +255,15 @@ ggplot(data=new.base, aes(new.base$API05B)) +
   geom_vline(xintercept = median(new.base$API05B), show.legend = TRUE, color="blue")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-1-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
+#####As the graph shows, we can notice the API05B seems to be left-skewed. 
+
+
+###Our independent factor variables
+
 
 ```r
-#As the graph shows, we can notice the API05B seems to be normally distributed but it's skewed a little. 
-```
-
-
-
-```r
-#Our independent factor variables
-
 new.base[1:97] %>% keep(is.factor) %>% gather() %>%
   ggplot(aes(value))+
   facet_wrap(~key,scales="free")+
@@ -263,11 +275,12 @@ new.base[1:97] %>% keep(is.factor) %>% gather() %>%
 ## they will be dropped
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
+
+###Our independent numerical variable 
 
 ```r
-#Our independent numerical variable 
 new.base[1:20] %>% keep(is.numeric) %>% gather() %>%
   ggplot(aes(value)) +
   facet_wrap(~key, scales="free")+
@@ -275,7 +288,7 @@ new.base[1:20] %>% keep(is.numeric) %>% gather() %>%
   geom_density()
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
 
 ```r
 new.base[21:40] %>% keep(is.numeric) %>% gather() %>%
@@ -285,7 +298,7 @@ new.base[21:40] %>% keep(is.numeric) %>% gather() %>%
   geom_density()
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-3-2.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-8-2.png)<!-- -->
 
 ```r
 new.base[41:60] %>% keep(is.numeric) %>% gather() %>%
@@ -295,7 +308,7 @@ new.base[41:60] %>% keep(is.numeric) %>% gather() %>%
   geom_density()
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-3-3.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-8-3.png)<!-- -->
 
 ```r
 new.base[61:80] %>% keep(is.numeric) %>% gather() %>%
@@ -305,7 +318,7 @@ new.base[61:80] %>% keep(is.numeric) %>% gather() %>%
   geom_density()
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-3-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-8-4.png)<!-- -->
 
 ```r
 new.base[81:96] %>% keep(is.numeric) %>% gather() %>%
@@ -315,23 +328,24 @@ new.base[81:96] %>% keep(is.numeric) %>% gather() %>%
   geom_density()
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-3-5.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-8-5.png)<!-- -->
+
+#####Most of our independent numerical variables are highly skewed
+#####We might want to perform log tranformation, but I would like to see the model before transformation, and if transformation is needed, I will perform it then. 
+
+
+###Splitting training and test dataset - cross validation
 
 ```r
-#most of our independent numerical variables are highly skewed
-#we might want to perform log tranformation, but I would like to see the model before transformation, and if transformation is needed, I will perform it then. 
-```
-
-
-```r
-##########splitting training and test datset - cross validation
-
 split<-createDataPartition(y=new.base$API05B,p=0.7,list=FALSE)
 
 training.newbase <- new.base[split,]
 test.newbase <- new.base[-split,]
+```
 
-#The first model with whole data
+####The first model with whole data
+
+```r
 lm<-lm(API05B~., data=training.newbase)
 summary(lm)
 ```
@@ -461,7 +475,7 @@ summary(lm)
 plot(lm)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-4-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-4-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-4-3.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-10-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-10-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-10-3.png)<!-- -->
 
 ```
 ## Warning in sqrt(crit * p * (1 - hh)/hh): NaNs produced
@@ -469,21 +483,20 @@ plot(lm)
 ## Warning in sqrt(crit * p * (1 - hh)/hh): NaNs produced
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-4-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-10-4.png)<!-- -->
 
-```r
-#There's a lot of NAs of Beta, which implies that it's not estimatable. 
-#We are going to perform variable selection using regsubsets-backward
-```
+#####There's a lot of NAs of Beta, which implies that it's not estimatable. 
+#####We are going to perform variable selection using regsubsets-backward
 
 
-
-```r
 ###regsubsets - model selection - backward - nvmax=10
 
 ###Model Selection through stepwise backward selection from regsubsets
-#I let the maximum number of predictors be 10, since it's going to be too complex to interpret or to build a model if we have more than 10 predictors
 
+#####I let the maximum number of predictors be 10, since it's going to be too complex to interpret or to build a model if we have more than 10 predictors
+
+
+```r
 reg1<-regsubsets(API05B~., data=training.newbase, really.big=TRUE,nvmax=10, method = "backward")
 ```
 
@@ -781,10 +794,12 @@ reg.summary
 ## 11  ( 1 ) " "    " "
 ```
 
-```r
-#we are going to see the changes of R^2, Adjusted R^2 (how well the model explained), Residuals Sum of Sqaured (Residuals), Cp (size of the bias), BIC 
+#####I am going to see the changes of R^2, Adjusted R^2 (how well the model explained), Residuals Sum of Sqaured (Residuals), Cp (size of the bias), BIC 
 
-#R Squared
+###R Squared
+
+
+```r
 plot(reg.summary$rsq, xlab="number of variables", ylab="Rsquared", type="l")
 max(reg.summary$rsq)
 ```
@@ -806,17 +821,16 @@ points(3, reg.summary$rsq[3], col="red",cex=1,pch=20)
 points(4, reg.summary$rsq[4], col="red",cex=1,pch=20)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+
+#####As the graph shows, we can notice a significant change of R^2 at 3 and 4 of number of variables
+#####After that, we see the graph is slightly increasing 
+#####I assume that those points are the critical points.  
+
+
+###Residuals Sum of Squared
 
 ```r
-#As the graph shows, we can notice a significant change of R^2 at 3 and 4 of number of variables
-#After that, we see the graph is slightly increasing 
-#I assume that those points are the critical points.  
-```
-
-
-```r
-#Residuals Sum of Squared
 plot(reg.summary$rss, xlab="number of variables", ylab="RSS", type="l")
 min(reg.summary$rss)
 ```
@@ -838,11 +852,11 @@ points(3, reg.summary$rss[3], col="red",cex=1,pch=20)
 points(4, reg.summary$rss[4], col="red",cex=1,pch=20)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
 
+###Adjusted R Squared
 
 ```r
-#Adjusted R Squared
 plot(reg.summary$adjr2, xlab="number of variables", ylab="Adjusted R^2", type="l")
 max(reg.summary$adjr2)
 ```
@@ -864,15 +878,17 @@ points(3,reg.summary$adjr2[3],col="red",cex=1,pch=20)
 points(4,reg.summary$adjr2[4],col="red",cex=1,pch=20)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+
+###CP
+#####From Penn State Univ Stat online Course..
+#####(https://onlinecourses.science.psu.edu/stat501/node/330/)
+
+#####"An underspecified model is a model in which important predictors are missing. And, an underspecified model yields biased regression coefficients and biased predictions of the response. Well, in short, Mallows' CP statistic estimates the size of the bias that is introduced into the predicted responses by having an underspecified model."
+####In short, CP implies the size of the bias
 
 
 ```r
-#CP
-#From Penn State Univ Stat online Course..
-#"An underspecified model is a model in which important predictors are missing. And, an underspecified model yields biased regression coefficients and biased predictions of the response. Well, in short, Mallows' CP statistic estimates the size of the bias that is introduced into the predicted responses by having an underspecified model."
-#In short, CP implies the size of the bias
-
 plot(reg.summary$cp, xlab="number of variables", ylab="Cp", type="l")
 min(reg.summary$cp)
 ```
@@ -894,11 +910,12 @@ points(3, reg.summary$cp[3],col="red",cex=1,pch=20)
 points(4, reg.summary$cp[4],col="red",cex=1,pch=20)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
 
+
+###BIC
 
 ```r
-#BIC
 plot(reg.summary$bic, xlab="number of variables", ylab="BIC", type="l")
 min(reg.summary$bic)
 ```
@@ -920,11 +937,9 @@ points(3, reg.summary$bic[3],col="red",cex=1,pch=20)
 points(4, reg.summary$bic[4],col="red",cex=1,pch=20)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
 
-```r
-#We would try to choose 4 number of predictors for our model first. 
-```
+#####We would try to choose 4 number of predictors for our model from regsubsets. 
 
 
 ```r
@@ -948,17 +963,18 @@ reg.summary$adjr2[4]
 ```r
 training.newbase1<-select(training.newbase,c("API05B",a))
 rownames(training.newbase1)<-1:nrow(training.newbase1)
+```
 
-#plots between response and predictors
+###Plots between dependent variable and independent variables
+
+
+```r
 plot(training.newbase1)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
 
-```r
-#GRAD_SCH with others shows some curves, it looks like log graph
-```
-
+#####GRAD_SCH with others shows some curves, it looks like log or squared term's graph
 
 
 ```r
@@ -969,7 +985,7 @@ training.newbase1 %>% keep(is.numeric) %>% gather() %>%
   geom_density()
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
 
 
 ```r
@@ -1005,11 +1021,9 @@ summary(lm1)
 plot(lm1)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-12-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-12-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-12-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-12-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-20-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-20-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-20-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-20-4.png)<!-- -->
 
-```r
-#adj R^2 68%, and there looks some patterns and some outliers 
-```
+#####Adj R^2 75%, and there looks some patterns and some outliers 
 
 
 ```r
@@ -1021,17 +1035,20 @@ plot(a,b)
 abline(0,1,col="red")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
 
-```r
-#predicted values vs test values of API05B
-#looks like linear, and some outliers
-```
+###Predicted values vs test values of API05B
+####The graph looks like linear, and some outliers
 
 
 ```r
 predictions1 <- lm1 %>% predict(test.newbase)
-# Model performance
+```
+
+###Model performance
+
+
+```r
 data.frame(
   MSE = mse(test.newbase$API05B, predictions1),
   RMSE = RMSE(predictions1, test.newbase$API05B),
@@ -1045,12 +1062,13 @@ data.frame(
 ```
 
 
+###1. Outliers
+
+####Finding outliers in our model
+
+####There are several ways to see outliers in our model
+
 ```r
-#########Outliers - Cooks Distance
-
-#finding outliers in our model
-
-#There are several ways to see outliers in our model
 outlierTest(lm1,n.max=50,cutoff=0.05)
 ```
 
@@ -1078,21 +1096,20 @@ outlierTest(lm1,n.max=50,cutoff=0.05)
 ## 2143 -4.484455         7.4326e-06   4.9568e-02
 ```
 
-```r
-#outlierTest shows which observations have greater than absolute value of 4 of rstudent. 
+#####outlierTest shows which observations have greater than absolute value of 4 of rstudent. 
 
+
+```r
 qqPlot(lm1,main="QQ Plot")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
 
 ```
 ## [1] 1356 3762
 ```
 
-```r
-#shows which observations have an impact on normality of residuals - which is outliers or bad leverage points
-```
+#####qqPlot shows which observations have an impact on normality of residuals - which is outliers or bad leverage points
 
 
 ```r
@@ -1128,7 +1145,7 @@ influencePlot(lm1,id.method="identify",main="influential plot",sub="circle size 
 ## graphical parameter
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
 
 ```
 ##        StudRes          Hat       CookD
@@ -1139,20 +1156,20 @@ influencePlot(lm1,id.method="identify",main="influential plot",sub="circle size 
 ## 5582 -3.671075 0.0117526656 0.031994464
 ```
 
+#####Hat Values against Studentized Residuals
+
+#\
+
+####However,
+####I'm using Standardized Residuals to detect outliers
+
+####From Springers Text book "Linear Regression", Chapter 3.2 - Regression Diagnostics: Tools for Checking the Validity of a Model, pg 60. 
+
+#####"In summary, an outlier is a point whose standardized residual falls outside the interval from -2 to 2. Recall that a bad leverage point is a leverage point which is also an outlier. Thus, a bad leverage point is a leverage point whose standardized residual falls outside the interval from -2 to 2."
+####In very large datasets, we apply the rule to -4 to 4. 
+#\
+
 ```r
-#Hat Values against Studentized Residuals
-```
-
-
-```r
-#However,
-#I'm using Standardized Residuals to detect outliers
-
-#from Springers Text book "Linear Regression"
-
-#"In summary, an outlier is a point whose standardized residual falls outside the interval from -2 to 2. Recall that a bad leverage point is a leverage point which is also an outlier. Thus, a bad leverage point is a leverage point whose standardized residual falls outside the interval from -2 to 2."
-#In very large datasets, we apply the rule to -4 to 4. 
-
 o1<-which(rstandard(lm1, infl = lm.influence(lm1, do.coef = FALSE),
                     sd=sqrt(deviance(lm1)/df.residual(lm1)),
                     type=c("sd.1","predictive"))>4)
@@ -1170,12 +1187,17 @@ length(outliers)
 ## [1] 36
 ```
 
+####The data set after removing outliers
+
 
 ```r
-#####The data set after removing outliers
 training.newbase2<-training.newbase1[-outliers,]
+```
 
-#investigating linear models between response and each predictors
+####Investigating linear models between response and each predictors - partial regression
+##### API05B = B0 + B1*MEALS + E
+
+```r
 lm.test1<-lm(API05B~MEALS, data=training.newbase2)
 summary(lm.test1)
 ```
@@ -1205,12 +1227,11 @@ summary(lm.test1)
 plot(lm.test1)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-18-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-18-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-18-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-18-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-29-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-29-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-29-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-29-4.png)<!-- -->
 
-```r
-#adj R^2 29.6%, plots looks ok except for normal Q-Q plot
-```
+#####Adj R^2 29.6%, plots looks ok except for normal Q-Q plot
 
+##### API05B = B0 + B1*SMOB + E
 
 ```r
 lm.test2<-lm(API05B~SMOB, data=training.newbase2)
@@ -1242,12 +1263,11 @@ summary(lm.test2)
 plot(lm.test2)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-19-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-19-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-19-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-19-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-30-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-30-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-30-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-30-4.png)<!-- -->
 
-```r
-#adj R^2 40%, seems heteroscedasticity
-```
+#####Adj R^2 40%, seems heteroscedasticity
 
+##### API05B = B0 + B1*GRAD_SCH + E
 
 ```r
 lm.test3<-lm(API05B~GRAD_SCH, data=training.newbase2)
@@ -1279,12 +1299,11 @@ summary(lm.test3)
 plot(lm.test3)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-20-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-20-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-20-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-20-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-31-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-31-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-31-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-31-4.png)<!-- -->
 
-```r
-#R^2 39.5%, plots shows extreme heteroscedasticity
-```
+#####R^2 39.5%, plots shows extreme heteroscedasticity
 
+##### API05B = B0 + B1*CW_CSTE + E
 
 ```r
 lm.test4<-lm(API05B~CW_CSTE, data=training.newbase2)
@@ -1316,15 +1335,13 @@ summary(lm.test4)
 plot(lm.test4)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-21-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-21-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-21-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-21-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-32-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-32-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-32-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-32-4.png)<!-- -->
+
+#####R^2 21.8%, plots shows some patterns showing heteroscedasticity
+
+###Model after removing outliers
 
 ```r
-#R^2 21.8%, plots shows some patterns showing heteroscedasticity
-```
-
-
-```r
-#####Model after removing outliers
 lm2<-lm(API05B~., data=training.newbase2)
 summary(lm2)
 ```
@@ -1357,22 +1374,24 @@ summary(lm2)
 plot(lm2)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-22-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-22-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-22-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-22-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-33-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-33-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-33-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-33-4.png)<!-- -->
 
-```r
-#adj R^2 77%, plots looks ok except for showing some pattern of the heteroscedasticity. 
+####Adj R^2 77%, plots looks ok except for showing some pattern of the heteroscedasticity. 
 
-#R^2 getting higher, plots for model such as 'fitted values vs residuals', 'Normal Q-Q', or 'sqrt of Standardized residuals vs fitted values' becomes much better after removing outliers
+####R^2 getting higher, plots for model such as 'fitted values vs residuals', 'Normal Q-Q', or 'sqrt of Standardized residuals vs fitted values' becomes much better after removing outliers
 
-#still showing some patterns, I will perform diagnosis of normality of residuals, multicollinearity, and heteroscedasticity from now. 
-```
+####It's still showing some patterns, I will perform diagnosis of normality of residuals, multicollinearity, and heteroscedasticity from now. 
 
 
 ```r
 a1<-predict(lm2,newdata = test.newbase)
 
 predictions2 <- lm2 %>% predict(test.newbase)
-# Model performance
+```
+
+### Model performance
+
+```r
 data.frame(
   MSE = mse(test.newbase$API05B, predictions2),
   RMSE = RMSE(predictions2, test.newbase$API05B),
@@ -1386,12 +1405,12 @@ data.frame(
 ```
 
 
+###2. Normality (of residuals)
+
+#####We don't have to worry about the assumption of normality of residuals (the error between the dependent variable and the independent variables) because when the sample size is sufficiently large, the Central Limit Theorem ensures that the distribution of residiual will be approximately normality. 
+
+
 ```r
-#########Normality (of residuals)
-
-#We don't have to worry about the assumption of normality of residuals (the error between the dependent variable and the independent variables) because when the sample size is sufficiently large, the Central Limit Theorem ensures that the distribution of residiual will be approximately normality. 
-
-
 qplot(residuals(lm2),
       geom="histogram",
       binwidth= 10,
@@ -1400,24 +1419,31 @@ qplot(residuals(lm2),
       ylab="Frequency")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-36-1.png)<!-- -->
 
 ```r
-#Residuals on our model are approximately normal distributed. 
+mean(residuals(lm2))
 ```
 
+```
+## [1] -8.158894e-16
+```
+
+####Residuals on our model are approximately normal distributed with zero mean. 
+
+
+###3. Multicolliniearity
+
+#####From STHDA website.. 
+
+####definition
+
+#####"In multiple regression , two or more predictor variables might be correlated with each other. This situation is referred as collinearity.
+
+#####There is an extreme situation, called multicollinearity, where collinearity exists between three or more variables even if no pair of variables has a particularly high correlation. This means that there is redundancy between predictor variables."
+
 
 ```r
-##########Multicolliniearity
-
-# From STHDA website.. 
-
-#definition
-
-##"In multiple regression , two or more predictor variables might be correlated with each other. This situation is referred as collinearity.
-
-#There is an extreme situation, called multicollinearity, where collinearity exists between three or more variables even if no pair of variables has a particularly high correlation. This means that there is redundancy between predictor variables."
-
 cor<-cor(training.newbase2)
 corrplot(cor, 
          method=c("circle"),
@@ -1425,11 +1451,9 @@ corrplot(cor,
          type=c("full"))
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-37-1.png)<!-- -->
 
 ```r
-#too less correlation between VCST_M911 and any others. 
-
 vif(lm2)
 ```
 
@@ -1438,35 +1462,31 @@ vif(lm2)
 ## 1.874570 1.458532 1.867840 1.485354
 ```
 
-```r
-#More than 4 VIF score must be removed, but we dont have any.
-```
+####More than 4 VIF score must be removed, but we dont have any.
+
+###4. Heteroscedasciticity (non-constant residuals)
 
 
 ```r
-##########heteroscedasciticity (non-constant residuals)
-
 plot(lm2)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-26-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-26-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-26-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-26-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-38-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-38-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-38-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-38-4.png)<!-- -->
+
+#####As we see the first plot of the model (fitted value vs residuals), 
+#####the residuals plots show decreasing variance towards the right end.
+#####It seems like there's heteroscedasticity exists, so I'm going to perform transformation. 
+
+###Box-cox
+
 
 ```r
-#As we see the first plot of the model (fitted value vs residuals), 
-#the residuals plots look fine except for decreasing variance towards the right end.
-#It seems like there's heteroscedasticity exists, so I'm going to perform transformation. 
-```
-
-
-
-```r
-#box-cox
-
-
 bc<-boxcox(lm2)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-39-1.png)<!-- -->
+
+#####Finding maximum log-likelihoods for the parameter of the Box-Cox power trasnformation, which is lambda
 
 
 ```r
@@ -1478,8 +1498,10 @@ lambda
 ## [1] 2
 ```
 
+###Boxcox power + log transformation
+
+
 ```r
-#boxcox + log transformation
 lm3<-lm(API05B^(lambda)~MEALS+log(SMOB+1)+log(GRAD_SCH+1)+CW_CSTE, data=training.newbase2)
 summary(lm3)
 ```
@@ -1513,18 +1535,20 @@ summary(lm3)
 plot(lm3)
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-28-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-28-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-28-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-28-4.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-41-1.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-41-2.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-41-3.png)<!-- -->![](API-Score-Project_files/figure-html/unnamed-chunk-41-4.png)<!-- -->
 
-```r
-#It looks improved. 
-```
+####Adj R^2 76.8%. 
+####The residuals plots look improved, which is that it looks like now it's homoscedasticity (constant residuals, no patterns)
 
 
 ```r
 a2<-sqrt(predict(lm3,newdata = test.newbase))
+```
 
-#Model Progress as graph
+###Model Progress by showing graphs of "predicted vs test values"
 
+
+```r
 plot(a,b,
      main="First model prediction",
      xlab="predicted values",
@@ -1532,7 +1556,7 @@ plot(a,b,
 abline(a=0,b=1,col="red")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-29-1.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-43-1.png)<!-- -->
 
 ```r
 plot(a1,b,
@@ -1542,7 +1566,7 @@ plot(a1,b,
 abline(a=0,b=1,col="red")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-29-2.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-43-2.png)<!-- -->
 
 ```r
 plot(a2,b,
@@ -1552,13 +1576,18 @@ plot(a2,b,
 abline(a=0,b=1,col="red")
 ```
 
-![](API-Score-Project_files/figure-html/unnamed-chunk-29-3.png)<!-- -->
+![](API-Score-Project_files/figure-html/unnamed-chunk-43-3.png)<!-- -->
+
+####The graphs with final model seems to be linear, and there is no patters. 
 
 
 ```r
 predictions3 <- lm3 %>% predict(test.newbase)
+```
 
-# Model performance
+### Model performance
+
+```r
 data.frame(
   MSE = mse(test.newbase$API05B, predictions3),
   RMSE = RMSE(predictions3, test.newbase$API05B),
@@ -1571,10 +1600,10 @@ data.frame(
 ## 1 298721055021 546553.8 0.7477782
 ```
 
+###Model performance changing process
+
 
 ```r
-#model performance changing process
-
 c.m<-data.frame(MSE=
                   c(mse(test.newbase$API05B, predictions1),
                     mse(test.newbase$API05B, predictions2),
@@ -1634,28 +1663,52 @@ summary(lm3)
 ## F-statistic:  5491 on 4 and 6628 DF,  p-value: < 2.2e-16
 ```
 
-```r
-#Conclusion
+###Conclusion
+  
+####I conclude that we are able to predict the API score for the future with the 3 of predictors, which are described at below, as 76.8% variance explained with all transformed predictors have less than 0.05 p-values, which is that they are all significant predictors on our response variable. 
+  
+####As interpretation of the Betas (each coefficients),    
+  
+#####For example,  
+  
+   
+   
+####- For a 1 units increase in MEALS, 
 
-#I conclude that we are able to predict the API score for the future with the 3 of predictors, which are described at below, as 76.8% variance explained with all transformed predictors have less than 0.05 p-values, which is that they are all significant predictors on our response variable. 
-
-#As interpretation of the Betas (each coefficients), 
-
-#For example, 
-#for a 10% increase in GRAD_SCH, Beta3 * log(1.1+1) = 35881.42 * log(1.1+1) = 26621.77.
-#API score is transformed with lambda, which is power to the 2, from box-cox transformation, 
-
-#Therefore, Beta3 * log(1.1+1)) = 35881.42 * log(1.1+1) = 26621.77 increase in squared API05B score
-
-#In other words, 1 percent change in GRAD_SCH is associated with Beta3 * log(201/100) change in (API05B)^(lambda), where lambda is 2
+$\mid(Beta1)\mid$ = 2127.65 decrease in $(API05B)^2$ score 
+  
 
 
-#For a 1% increase in SMOB, abs(Beta1) * log(2.01) = 61332.05*log(2.01) = 42818.66 
-#Therefore, abs(Beta1)*log(2.01) = 61332.05 * log(2.01) = 42818.66 decrease in squared API05B score
+####- For a 1% increase in SMOB, 
 
-#In other words, 1 percent change in SMOB is associated with abs(Beta1) * log(201/100) change in (API05B)^(lambda), where lambda is 2
+$\mid Beta2\mid$ $\times$ ${\log(1.01+1))}$ = 61332.05 $\times$ ${\log(1.01+1))}$ = 42818.66 
+  
 
-#For a 1 units increase in MEALS, abs(Beta1) = 2127.65 decrease in squared API05B score
+#####     Therefore, 
 
-#For a 10 units increase in CW_CSTE, Beta4*10 = 6170.79*10 = 61707.9 increase in sqaured API05B score
-```
+$\mid Beta2\mid$ $\times$ ${\log(1.01+1))}$ = 61332.05 $\times$ ${\log(1.01+1))}$ = 42818.66 decrease in squared API05B score  
+  
+#####     In other words, 1 percent change in SMOB is associated with 
+
+$\mid Beta2\mid$ $\times$ ${\log(1.01+1))}$ change in $API05B^(lambda)$ = $(API05B)^2$, where lambda is 2  
+  
+
+
+####- For a 10% increase in GRAD_SCH,  
+
+Beta3 $\times$ ${\log (1.1+1)}$ = 35881.42 $\times$ ${\log (1.1+1)}$ = 26621.77  
+
+#####     API score is transformed with lambda, which is power to the 2, from box-cox transformation, 
+
+#####     Therefore, 
+
+Beta3 $\times$ ${\log(1.1+1))}$ = 35881.42 $\times$ ${\log (1.1+1)}$ = 26621.77 increase in squared API05B score
+
+#####     In other words, 1 percent change in GRAD_SCH is associated with 
+
+Beta3 $\times$ ${\log(1.1+1))}$ change in $API05B^(lambda)$ = $(API05B)^2$, where lambda is 2
+
+
+####- For a 10 units increase in CW_CSTE, 
+
+Beta4 $\times$ 10 = 6170.79 $\times$ 10 = 61707.9 increase in sqaured API05B score
